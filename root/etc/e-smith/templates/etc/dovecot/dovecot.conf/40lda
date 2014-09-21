@@ -1,0 +1,19 @@
+
+postmaster_address = postmaster@{$DomainName}
+lda_original_recipient_header = to
+
+{
+my $reason = $dovecot{'RejectMessage'} || '';
+my $subject = $dovecot{'RejectSubject'} || '';
+if ($reason ne ''){
+    $OUT .= "rejection_reason = $reason\n";
+}
+if ($subject ne ''){
+    $OUT .= "rejection_subject = $subject\n";
+}
+}
+
+protocol lda \{
+  mail_plugins = $mail_plugins {$OUT .= (($sieve{'status'} || 'disabled') eq 'enabled') ? 'sieve':''}
+\}
+

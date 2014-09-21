@@ -1,0 +1,36 @@
+commit 7a54af2bf0369e8d64bb35e521007dfe0956eba2
+Author: Daniel Berteaud <daniel@firewall-services.com>
+Date:   Mon Jun 23 19:44:55 2014 +0200
+
+    Remove submission_host for now
+    Not supported on 2.0.9. Need to find a better way
+
+commit 614ff05dab83fea105e8a0144f5c275eaeae6193
+Author: Daniel Berteaud <daniel@firewall-services.com>
+Date:   Mon Jun 23 18:51:04 2014 +0200
+
+    Spec file update
+
+commit 2db3b676dfc116bc0c1aa5b41b9a58579b4c35ee
+Author: Daniel Berteaud <daniel@firewall-services.com>
+Date:   Tue Oct 29 16:51:00 2013 +0100
+
+    update spec file
+
+commit 53d8ca95d01e99f338149684ef647fdda39ca5ac
+Author: Daniel Berteaud <daniel@firewall-services.com>
+Date:   Tue Oct 29 16:49:09 2013 +0100
+
+    Use SMTP to send sieve notif (forward, vacation etc...) so the From envolop is correctly set
+
+commit c8e1be1445d1ffc32378f89a44eceac98ab57ee0
+Author: Daniel Berteaud <daniel@firewall-services.com>
+Date:   Mon Mar 25 16:26:21 2013 +0100
+
+    Fix ACL and default ACL to set 755/644 permissions on maildirs
+
+commit 53941d7314d45553bb33a9dc581f761f37fde88b
+Author: Daniel Berteaud <daniel@firewall-services.com>
+Date:   Thu Feb 28 16:16:15 2013 +0100
+
+    initial commit

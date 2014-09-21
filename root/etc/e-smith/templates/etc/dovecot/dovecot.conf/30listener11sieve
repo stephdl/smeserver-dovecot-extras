@@ -1,0 +1,19 @@
+{
+if (($sieve{'status'} || 'enabled') eq 'enabled'){
+    my $port = $sieve{'TCPPort'} || '4190';
+    my $address = $sieve{'Listen'} || '127.0.0.1';
+    $OUT .=<<"HERE";
+
+service managesieve-login {
+  inet_listener sieve {
+    port = $port
+    address = $address
+  }
+}
+
+HERE
+}
+else {
+    $OUT .= "# Sieve is disabled";
+}
+}

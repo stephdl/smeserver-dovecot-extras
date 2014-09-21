@@ -1,0 +1,6 @@
+{
+if (($sieve{'status'} || 'disabled') eq 'enabled'){
+    $proto .= " sieve";
+}
+$OUT .= "";
+}

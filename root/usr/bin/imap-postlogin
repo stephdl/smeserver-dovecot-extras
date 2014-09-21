@@ -1,0 +1,5 @@
+#!/bin/sh
+ACL_GROUPS=`groups $USER | tr ' '  ','`
+export ACL_GROUPS
+export USERDB_KEYS="$USERDB_KEYS acl_groups"
+exec "$@"

@@ -1,0 +1,68 @@
+{
+return "" if (($dovecot{'SharedMailbox'} || 'disabled') eq 'disabled');
+
+push @plugins, 'acl';
+push @imap_plugins, 'imap_acl';
+
+my $string =<<'HERE';
+
+mail_access_groups = sharedmailbox
+
+service dict {
+  unix_listener dict {
+    mode = 0660
+    group = sharedmailbox
+  }
+}
+
+service auth {
+  unix_listener auth-userdb {
+    mode = 0660
+    group = sharedmailbox
+  }
+}
+
+service imap {
+  executable = imap imap-postlogin
+}
+
+service imap-postlogin {
+  executable = script-login -d /usr/bin/imap-postlogin
+  unix_listener imap-postlogin {
+  }
+}
+
+
+namespace {
+  type = private
+  separator = /
+  prefix =
+  inbox = yes
+}
+
+namespace {
+  type = shared
+  separator = /
+  prefix = shared/%%u/
+  location = maildir:%%h/Maildir:INDEX=~/Maildir/shared/%%u
+  subscriptions = no
+  list = children
+}
+
+plugin {
+  acl_shared_dict = file:/home/e-smith/db/dovecot/sharedmailbox.db
+}
+
+plugin {
+  acl = vfile
+}
+
+plugin {
+  acl_anyone = allow
+}
+
+HERE
+
+push @conf, $string;
+$OUT .= '';
+}

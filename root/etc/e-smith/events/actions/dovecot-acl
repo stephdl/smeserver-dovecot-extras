@@ -1,0 +1,89 @@
+#!/usr/bin/perl -w
+
+
+use esmith::ConfigDB;
+use esmith::AccountsDB;
+use File::Find;
+
+my $c = esmith::ConfigDB->open || die "Couldn't open ConfigDB\n";
+my $a = esmith::AccountsDB->open_ro || die "Couldn't open AccountsdDB\n";
+
+my $dovecot = $c->get('dovecot');
+
+die "couldn't find dovecot service\n" unless ($dovecot);
+
+my $event = $ARGV[0];
+
+# SharedMailboxes disabled ?
+if (($dovecot->prop('SharedMailbox') || 'disabled') eq 'disabled'){
+    if (($dovecot->prop('SharedMailboxAcl') || 'yes') ne 'no'){
+        foreach my $user ($a->users){
+            my $name = $user->key;
+            die "Error removing SharedMailbox ACLs ($name"."'s Maildir)\n" unless (
+                system('/usr/bin/setfacl',
+                       '-R',
+                       '-x',
+                       'g:sharedmailbox',
+                       "/home/e-smith/files/users/$name") == 0 &&
+                system('/bin/chmod',
+                       '-R',
+                       'g-s',
+                       "/home/e-smith/files/users/$name/Maildir") == 0
+            );
+        }
+    }
+    $dovecot->set_prop('SharedMailboxAcl','no');
+    exit(0);
+}
+
+# If SharedMailbox is enabled
+
+# Set the correct ACL during user creation
+if ($event && $event eq 'user-create'){
+    my $user = $ARGV[1];
+    set_acl($user);
+}
+
+if (($dovecot->prop('SharedMailboxAcl') || 'no') ne 'yes'){
+    # ACL for existing users haven't been set yet
+    foreach my $user ($a->users){
+        my $name = $user->key;
+        set_acl($name);
+    }
+    $dovecot->set_prop('SharedMailboxAcl','yes');
+}
+
+# Set ACL on a user's Maildir
+sub set_acl {
+    my $user = shift;
+    die "Missing username\n" unless ($user);
+    die "Couldn't find $user"."'s home dir\n" unless (-e "/home/e-smith/files/users/$user");
+    find(\&dirperm,  "/home/e-smith/files/users/$user/Maildir");
+    die "Error applying permissions to $user 's Maildir\n" unless (
+        # sharedmailbox group needs read / write access on Maildir
+        system('/usr/bin/setfacl',
+               '-R',
+               '-m',
+               'u::rwX,g::rwX,o::rX,g:sharedmailbox:rwX,d:u::rwX,d:g::rwX,d:g:sharedmailbox:rwX,d:o::rX',
+               "/home/e-smith/files/users/$user/Maildir") == 0 &&
+        # Grant sharedmailbox group permission to go through
+        # the home dir so it can access the Maildir, but don't let it read
+        # anything (except the Maildir)
+        system('/usr/bin/setfacl',
+               '-m',
+               'g:sharedmailbox:x',
+               "/home/e-smith/files/users/$user") == 0
+    );
+}
+
+# The kernel will handle group perms when a user
+# create a dir in another user's Maildir (if IMAP ACL allows it)
+# This will prevent dovecot errors, see 
+# http://wiki2.dovecot.org/SharedMailboxes/Permissions and
+# http://wiki2.dovecot.org/Errors/ChgrpNoPerm
+sub dirperm {
+    system('/bin/chmod',
+           'g+s',
+           "$_") if (-d);
+}
+

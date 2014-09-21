@@ -1,0 +1,20 @@
+# Dovecot LDA delivery
+{
+    # vim: ft=perl:
+    use esmith::ConfigDB;
+    my $cdb = esmith::ConfigDB->open_ro || die "Couldn't open ConfigDB\n";
+    my $sieve = $cdb->get('sieve');
+    my $usersieve = $props{Sieve} || 'enabled';
+    my $globalsieve = ($sieve) ? ($sieve->prop('status') || 'disabled') : 'disabled';
+
+    if (($usersieve ne 'enabled') || ($globalsieve ne 'enabled')){
+        $OUT .= "# Sieve is disabled\n";
+    }
+    elsif ($props{EmailForward} !~ /^(local|both)$/) {
+        $OUT .= "# No local delivery (Dovecot LDA)\n";
+    }
+    else{
+        $OUT .= '| /var/qmail/bin/preline -f /usr/libexec/dovecot/dovecot-lda -a "$RECIPIENT"; if [ $? -ne 0 ] ; then exit -1; else exit 99; fi;';
+    }
+}
+
